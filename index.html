@@ -374,6 +374,36 @@ a{ color:inherit; }
 }
 .block .btn{ margin-top:6px; }
 
+/* ── ОБРАТНЫЙ ОТСЧЁТ ─────────────────────────────────────────── */
+.countdown{ display:flex; flex-direction:column; align-items:center; gap:20px; width:100%; }
+.countdown__title{
+  font-family:'Great Vibes',cursive;
+  font-size:clamp(34px,10vw,46px);
+  line-height:1.24;
+  color:var(--moss);
+  max-width:13ch;
+  text-wrap:balance;
+}
+.countdown__row{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  width:min(330px,100%);
+}
+.cd{ display:flex; flex-direction:column; align-items:center; gap:5px; }
+.cd + .cd{ border-left:1px solid var(--rule); }
+.cd__num{
+  font-family:'Prata',Georgia,serif;
+  font-size:27px;
+  line-height:1;
+  color:var(--ink);
+  font-variant-numeric:tabular-nums;
+}
+.cd__label{
+  font-size:11px;
+  letter-spacing:.05em;
+  color:var(--muted);
+}
+
 .seats{ display:flex; align-items:center; gap:14px; }
 .seats span{ font-size:12px; letter-spacing:.24em; text-transform:uppercase; }
 .seats b{
@@ -542,6 +572,16 @@ a{ color:inherit; }
       <div class="block reveal">
         <p class="block__text">Будем благодарны за поздравления без цветов — вскоре после росписи мы отправляемся в свадебное путешествие</p>
       </div>
+
+      <div class="countdown reveal">
+        <p class="countdown__title">До скорой встречи через</p>
+        <div class="countdown__row" data-countdown>
+          <div class="cd"><span class="cd__num">—</span><span class="cd__label">дней</span></div>
+          <div class="cd"><span class="cd__num">—</span><span class="cd__label">часов</span></div>
+          <div class="cd"><span class="cd__num">—</span><span class="cd__label">минут</span></div>
+          <div class="cd"><span class="cd__num">—</span><span class="cd__label">секунд</span></div>
+        </div>
+      </div>
     </section>
 
     <!-- ФИНАЛ ───────────────────────────────────────────────── -->
@@ -626,6 +666,43 @@ a{ color:inherit; }
       el.style.setProperty("--tear-b", tear("up", 43 + i * 23));
     }
   });
+
+  /* ── Обратный отсчёт до росписи ───────────────────────────────
+     Момент задан со смещением +03:00 — это Лимасол в сентябре
+     (летнее время). Так отсчёт верен в любом часовом поясе гостя.
+     ───────────────────────────────────────────────────────────── */
+  const board = document.querySelector("[data-countdown]");
+  if (board) {
+    const TARGET = new Date("2026-09-12T13:00:00+03:00");
+    const cells = [...board.querySelectorAll(".cd")];
+    const FORMS = [
+      ["день", "дня", "дней"],
+      ["час", "часа", "часов"],
+      ["минута", "минуты", "минут"],
+      ["секунда", "секунды", "секунд"]
+    ];
+    const plural = (n, f) => {
+      const ones = n % 10, tens = n % 100;
+      if (ones === 1 && tens !== 11) return f[0];
+      if (ones >= 2 && ones <= 4 && (tens < 12 || tens > 14)) return f[1];
+      return f[2];
+    };
+    const tick = () => {
+      const left = Math.max(0, Math.floor((TARGET - Date.now()) / 1000));
+      const parts = [
+        Math.floor(left / 86400),
+        Math.floor(left / 3600) % 24,
+        Math.floor(left / 60) % 60,
+        left % 60
+      ];
+      cells.forEach((cell, i) => {
+        cell.querySelector(".cd__num").textContent = parts[i];
+        cell.querySelector(".cd__label").textContent = plural(parts[i], FORMS[i]);
+      });
+    };
+    tick();
+    setInterval(tick, 1000);
+  }
 
   /* ── Появление по скроллу ─────────────────────────────────── */
   const items = document.querySelectorAll(".reveal");
